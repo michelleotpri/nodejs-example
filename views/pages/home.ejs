@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="20">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://code.jquery.com/jquery-<%= settings.version %>.min.js"></script>
+    <title>Crypto Dashboard</title>
+</head>
+<body>
+    <header>
+        <h1>Crypto Dashboard</h1>
+        <nav>
+            <a href="/">Home</a>
+        </nav>
+    </header>
+
+
+<main>
+    
+    <div style="display: inline;">
+        <h2 style="margin:0px!important">Top Cryptocurrencies</h2>
+        <div class="filter">
+            <label for="sort">Sort by:</label>
+            <select id="sort" onchange="sortTable()">
+                <option value="market_cap_desc">Market Cap (desc)</option>
+                <option value="market_cap_asc">Market Cap (asc)</option>
+                <option value="price_desc">Price (desc)</option>
+                <option value="price_asc">Price (asc)</option>
+            </select>
+        </div>  
+    </div>
+    <table id="cryptoTable" style="margin-top: 1rem;">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Logo</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Volume</th>
+                <th>Market Cap</th>
+                <th>24h Change</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% coins.forEach(coin => { %>
+                <tr>
+                    <td><%= coin.market_cap_rank %></td>
+                    <td><img src="<%= coin.image %>" alt="<%= coin.name %> logo" width="24" height="24"></td>
+                    <td><a href="/cryptocurrency/<%= coin.id %>"><%= coin.name %></a></td>
+                    <td>$<%= coin.current_price.toFixed(2) %></td>
+                    <td>$<%= coin.total_volume.toLocaleString() %></td>
+                    <td>$<%= coin.market_cap.toLocaleString() %></td>
+                    <td style="color: <%= coin.price_change_percentage_24h > 0 ? 'green' : 'red' %>;">
+                        <%= coin.price_change_percentage_24h.toFixed(2) %>%
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <% if (currentPage > 1) { %>
+            <a href="/?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+        <% } %>
+        <span>Page <%= currentPage %></span>
+        <% if (coins.length === ITEMS_PER_PAGE) { %>
+            <a href="/?page=<%= currentPage + 1 %>">Next &raquo;</a>
+        <% } %>
+    </div>
+</main>
+
+<script>
+
+function filterTable() {
+    var filter = document.getElementById("filter").value;
+    var rows = document.querySelectorAll("#cryptoTable tbody tr");
+
+    rows.forEach(row => {
+        var rank = parseInt(row.children[0].textContent);
+        if (filter === "all" || (filter === "top10" && rank <= 10) || (filter === "top50" && rank <= 50)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+function sortTable() {
+    var table = document.getElementById("cryptoTable");
+    var rows = Array.from(table.rows).slice(1);
+    var sortValue = document.getElementById("sort").value;
+
+    rows.sort((a, b) => {
+        var valA, valB;
+        if (sortValue === "market_cap_desc" || sortValue === "market_cap_asc") {
+            valA = parseInt(a.cells[5].textContent.replace(/[$,]/g, ''));
+            valB = parseInt(b.cells[5].textContent.replace(/[$,]/g, ''));
+        } else if (sortValue === "price_desc" || sortValue === "price_asc") {
+            valA = parseFloat(a.cells[3].textContent.replace(/[$,]/g, ''));
+            valB = parseFloat(b.cells[3].textContent.replace(/[$,]/g, ''));
+        }
+
+        if (sortValue === "market_cap_desc" || sortValue === "price_desc") {
+            return valB - valA;
+        } else {
+            return valA - valB;
+        }
+    });
+
+    rows.forEach(row => table.appendChild(row));
+}
+</script>
+
+<footer>
+    <p>&copy; <%= new Date().getFullYear() %> Crypto Dashboard</p>
+</footer>
+</body>
+</html>
